@@ -1,3 +1,4 @@
+import { OccupancySensorRequirements } from '@matter/main/devices/occupancy-sensor';
 import type { Logging } from 'homebridge';
 
 import {
@@ -7,8 +8,9 @@ import {
 } from './printerState';
 import type { MatterAccessoryDefinition, MatterApi, PrinterConfig } from './types';
 
-const OCCUPANCY_CLUSTER = 'OccupancySensing';
-const BOOLEAN_STATE_CLUSTER = 'BooleanState';
+/** matter.js behavior IDs (camelCase) — must match `api.matter.clusterNames`. */
+const OCCUPANCY_CLUSTER = 'occupancySensing';
+const BOOLEAN_STATE_CLUSTER = 'booleanState';
 
 /** Stable Matter UUID namespace for this plugin (do not change after pairing). */
 export const MATTER_UUID_NAMESPACE = 'octoprint-matter-status';
@@ -37,9 +39,17 @@ export class OctoPrintMatterStatusAccessory {
     if (this.printer.sensorType === 'contact') {
       return types.ContactSensor;
     }
-    // matter.js sometimes names this "MotionSensor"; controllers show
-    // OccupancySensor. We handle both names.
-    return types.OccupancySensor ?? types.MotionSensor;
+    const base = types.MotionSensor;
+    if (!base || typeof base !== 'object' || !('with' in base)) {
+      this.log.warn(
+        `[${this.printer.sensorName}] MotionSensor device type unavailable; occupancy updates may fail.`,
+      );
+      return base;
+    }
+    // OccupancySensorDevice only includes Identify by default; OccupancySensing
+    // must be added explicitly with a supported feature (see matter.js docs).
+    const withMethod = (base as { with: (...behaviors: unknown[]) => unknown }).with;
+    return withMethod(OccupancySensorRequirements.OccupancySensingServer.with('PassiveInfrared'));
   }
 
   /** Cluster used for state updates. */

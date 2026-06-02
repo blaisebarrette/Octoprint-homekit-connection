@@ -20,21 +20,33 @@ function fakeLog(): Logging {
   }) as unknown as Logging;
 }
 
+function fakeMotionSensorDeviceType() {
+  const deviceType = {
+    name: 'OccupancySensor',
+    with: vi.fn((...behaviors: unknown[]) => ({
+      ...deviceType,
+      behaviors,
+    })),
+  };
+  return deviceType;
+}
+
 function fakeMatter() {
   const updateAccessoryState = vi.fn(async () => {});
+  const motionSensor = fakeMotionSensorDeviceType();
   const matter: MatterApi = {
     uuid: {
       generate: (data: string) => `uuid:${data}`,
       isValid: () => true,
     },
-    deviceTypes: { OccupancySensor: 'OccupancySensor', ContactSensor: 'ContactSensor' },
-    clusterNames: { OccupancySensing: 'OccupancySensing', BooleanState: 'BooleanState' },
+    deviceTypes: { MotionSensor: motionSensor, ContactSensor: 'ContactSensor' },
+    clusterNames: { OccupancySensing: 'occupancySensing', BooleanState: 'booleanState' },
     registerPlatformAccessories: vi.fn(async () => {}),
     unregisterPlatformAccessories: vi.fn(async () => {}),
     updateAccessoryState,
     getAccessoryState: vi.fn(async () => undefined),
   };
-  return { matter, updateAccessoryState };
+  return { matter, updateAccessoryState, motionSensor };
 }
 
 function makePrinter(overrides: Partial<PrinterConfig> = {}): PrinterConfig {
@@ -59,10 +71,11 @@ describe('OctoPrintMatterStatusAccessory', () => {
   });
 
   it('builds an occupancy definition', () => {
-    const { matter } = fakeMatter();
+    const { matter, motionSensor } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(matter, makePrinter(), fakeLog());
     const def = acc.buildDefinition();
-    expect(def.deviceType).toBe('OccupancySensor');
+    expect(motionSensor.with).toHaveBeenCalledOnce();
+    expect(def.deviceType).toEqual(expect.objectContaining({ behaviors: expect.any(Array) }));
     expect(def.displayName).toBe('Printer 1');
     expect(def.clusters?.occupancySensing).toBeDefined();
   });
@@ -85,7 +98,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     await acc.applyActive(true);
     expect(updateAccessoryState).toHaveBeenCalledWith(
       `uuid:${MATTER_UUID_NAMESPACE}:p1`,
-      'OccupancySensing',
+      'occupancySensing',
       { occupancy: { occupied: true } },
     );
   });
@@ -108,7 +121,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     await acc.applyActive(true);
     expect(updateAccessoryState).toHaveBeenCalledWith(
       `uuid:${MATTER_UUID_NAMESPACE}:p1`,
-      'OccupancySensing',
+      'occupancySensing',
       { occupancy: { occupied: false } },
     );
   });
@@ -123,7 +136,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     await acc.applyActive(true);
     expect(updateAccessoryState).toHaveBeenCalledWith(
       `uuid:${MATTER_UUID_NAMESPACE}:p1`,
-      'BooleanState',
+      'booleanState',
       { stateValue: false },
     );
   });

@@ -9,5 +9,5 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   // Fourni par le runtime Homebridge: ne pas bundler.
-  external: ['homebridge'],
+  external: ['homebridge', '@matter/main', '@matter/main/devices/occupancy-sensor'],
 });
