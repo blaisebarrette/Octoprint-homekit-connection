@@ -28,13 +28,16 @@ The plugin polls OctoPrint via `GET /api/printer` (configurable interval). No ch
 In **Homebridge Config UI X** → **Terminal**, or via SSH on the Homebridge host:
 
 ```bash
-sudo hb-service install-plugin homebridge-octoprint-matter-status@github:blaisebarrette/Octoprint-homekit-connection
+sudo hb-service add homebridge-octoprint-matter-status@github:blaisebarrette/Octoprint-homekit-connection
 ```
 
-Or with npm directly:
+On the **Homebridge APT package** (Raspberry Pi / Debian), use `hb-shell` if you prefer npm directly:
 
 ```bash
-sudo npm install -g --unsafe-perm git+https://github.com/blaisebarrette/Octoprint-homekit-connection.git
+sudo hb-shell
+npm install git+https://github.com/blaisebarrette/Octoprint-homekit-connection.git
+exit
+sudo hb-service restart
 ```
 
 The plugin compiles automatically on install (`prepare` script). Restart Homebridge, then add the **OctoPrint Matter Status** platform.
@@ -42,7 +45,7 @@ The plugin compiles automatically on install (`prepare` script). Restart Homebri
 ### Via npm (once published)
 
 ```bash
-sudo hb-service install-plugin homebridge-octoprint-matter-status
+sudo hb-service add homebridge-octoprint-matter-status
 ```
 
 ### Via Homebridge Config UI X
