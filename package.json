@@ -1,0 +1,56 @@
+{
+  "name": "homebridge-octoprint-matter-status",
+  "displayName": "OctoPrint Matter Status",
+  "version": "0.1.0",
+  "description": "Expose OctoPrint print status as Matter sensors (occupancy/contact) for Apple Home, Google Home, and other Matter controllers via Homebridge 2.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "homebridge": "^2.0.0",
+    "node": "^22.0.0 || ^24.0.0"
+  },
+  "files": [
+    "dist",
+    "homebridge-ui",
+    "config.schema.json"
+  ],
+  "keywords": [
+    "homebridge-plugin",
+    "octoprint",
+    "matter",
+    "3d-printer",
+    "occupancy-sensor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blaisebarrette/Octoprint-homekit-connection.git"
+  },
+  "bugs": {
+    "url": "https://github.com/blaisebarrette/Octoprint-homekit-connection/issues"
+  },
+  "homepage": "https://github.com/blaisebarrette/Octoprint-homekit-connection#readme",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "watch": "tsup --watch",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.1",
+    "homebridge": "^2.0.2",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.1",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "@homebridge/plugin-ui-utils": "^2.2.4"
+  }
+}

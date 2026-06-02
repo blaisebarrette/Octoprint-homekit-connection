@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    .op-wrap { padding: 4px 2px 12px; }
+    .op-intro { font-size: 0.9rem; opacity: 0.85; margin-bottom: 12px; }
+    .op-printer {
+      border: 1px solid rgba(127, 127, 127, 0.3);
+      border-radius: 8px;
+      padding: 14px 14px 6px;
+      margin-bottom: 14px;
+    }
+    .op-printer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .op-printer-title { font-weight: 600; }
+    .op-row { margin-bottom: 10px; }
+    .op-row label { display: block; font-size: 0.8rem; margin-bottom: 3px; opacity: 0.85; }
+    .op-row input[type="text"],
+    .op-row input[type="password"],
+    .op-row input[type="number"],
+    .op-row select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(127, 127, 127, 0.4);
+      background: transparent;
+      color: inherit;
+    }
+    .op-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+    .op-grid > div { flex: 1; min-width: 120px; }
+    .op-check { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+    .op-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .op-btn {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+    .op-btn-primary { background: #4f46e5; color: #fff; }
+    .op-btn-secondary { background: rgba(127, 127, 127, 0.25); color: inherit; }
+    .op-btn-danger { background: #dc2626; color: #fff; }
+    .op-status { font-size: 0.82rem; margin-top: 8px; min-height: 18px; }
+    .op-status.ok { color: #16a34a; }
+    .op-status.err { color: #dc2626; }
+    .op-status.busy { opacity: 0.8; }
+    .op-footer { display: flex; gap: 8px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="op-wrap">
+    <div class="op-intro">
+      Configurez une ou plusieurs imprimantes OctoPrint. Chaque imprimante est exposée comme un
+      capteur Matter portant le nom choisi. Le bouton « Tester » vérifie l'URL et la clé API.
+    </div>
+
+    <div id="op-printers"></div>
+
+    <div class="op-footer">
+      <button type="button" id="op-add" class="op-btn op-btn-secondary">+ Ajouter une imprimante</button>
+      <button type="button" id="op-save" class="op-btn op-btn-primary">Enregistrer</button>
+    </div>
+    <div id="op-global-status" class="op-status"></div>
+  </div>
+
+  <script>
+    (async () => {
+      const container = document.getElementById('op-printers');
+      const globalStatus = document.getElementById('op-global-status');
+
+      let config = {};
+      try {
+        const configs = await homebridge.getPluginConfig();
+        config = configs[0] || {};
+      } catch (e) {
+        config = {};
+      }
+      if (!config.platform) {
+        config.platform = 'OctoPrintMatterStatus';
+      }
+      if (!config.name) {
+        config.name = 'OctoPrint Matter Status';
+      }
+      let printers = Array.isArray(config.printers) ? config.printers.slice() : [];
+      if (printers.length === 0) {
+        printers.push(newPrinter(1));
+      }
+
+      function newPrinter(n) {
+        return {
+          id: 'printer' + n,
+          sensorName: 'Imprimante ' + n,
+          octoprintUrl: 'http://octopi.local',
+          apiKey: '',
+          sensorType: 'occupancy',
+          enabled: true,
+          pollIntervalSeconds: 10,
+          invertState: false,
+        };
+      }
+
+      function render() {
+        container.innerHTML = '';
+        printers.forEach((printer, index) => {
+          container.appendChild(renderPrinter(printer, index));
+        });
+      }
+
+      function field(labelText, inputEl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'op-row';
+        const label = document.createElement('label');
+        label.textContent = labelText;
+        wrap.appendChild(label);
+        wrap.appendChild(inputEl);
+        return wrap;
+      }
+
+      function bindInput(el, printer, key, transform) {
+        el.addEventListener('input', () => {
+          printer[key] = transform ? transform(el.value) : el.value;
+        });
+      }
+
+      function renderPrinter(printer, index) {
+        const card = document.createElement('div');
+        card.className = 'op-printer';
+
+        const head = document.createElement('div');
+        head.className = 'op-printer-head';
+        const title = document.createElement('div');
+        title.className = 'op-printer-title';
+        title.textContent = printer.sensorName || ('Imprimante ' + (index + 1));
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'op-btn op-btn-danger';
+        removeBtn.textContent = 'Supprimer';
+        removeBtn.addEventListener('click', () => {
+          printers.splice(index, 1);
+          if (printers.length === 0) {
+            printers.push(newPrinter(1));
+          }
+          render();
+        });
+        head.appendChild(title);
+        head.appendChild(removeBtn);
+        card.appendChild(head);
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = printer.sensorName || '';
+        nameInput.placeholder = 'Prusa MK3S Printing';
+        nameInput.addEventListener('input', () => {
+          printer.sensorName = nameInput.value;
+          title.textContent = nameInput.value || ('Imprimante ' + (index + 1));
+        });
+        card.appendChild(field('Nom du capteur (affiché dans HomeKit/Matter)', nameInput));
+
+        const idInput = document.createElement('input');
+        idInput.type = 'text';
+        idInput.value = printer.id || '';
+        idInput.placeholder = 'mk3s';
+        bindInput(idInput, printer, 'id', (v) => v.trim());
+        card.appendChild(field('Identifiant unique (stable)', idInput));
+
+        const urlInput = document.createElement('input');
+        urlInput.type = 'text';
+        urlInput.value = printer.octoprintUrl || '';
+        urlInput.placeholder = 'http://octopi.local';
+        bindInput(urlInput, printer, 'octoprintUrl', (v) => v.trim());
+        card.appendChild(field('URL OctoPrint', urlInput));
+
+        const keyInput = document.createElement('input');
+        keyInput.type = 'password';
+        keyInput.value = printer.apiKey || '';
+        keyInput.placeholder = 'Clé API (permission STATUS)';
+        bindInput(keyInput, printer, 'apiKey', (v) => v.trim());
+        card.appendChild(field('Clé API OctoPrint', keyInput));
+
+        const grid = document.createElement('div');
+        grid.className = 'op-grid';
+
+        const typeSelect = document.createElement('select');
+        [['occupancy', 'Occupancy / Motion'], ['contact', 'Contact']].forEach(([val, label]) => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = label;
+          if ((printer.sensorType || 'occupancy') === val) {
+            opt.selected = true;
+          }
+          typeSelect.appendChild(opt);
+        });
+        typeSelect.addEventListener('change', () => {
+          printer.sensorType = typeSelect.value;
+        });
+        grid.appendChild(field('Type de capteur', typeSelect));
+
+        const pollInput = document.createElement('input');
+        pollInput.type = 'number';
+        pollInput.min = '2';
+        pollInput.value = printer.pollIntervalSeconds || 10;
+        pollInput.addEventListener('input', () => {
+          const n = parseInt(pollInput.value, 10);
+          printer.pollIntervalSeconds = Number.isFinite(n) ? n : 10;
+        });
+        grid.appendChild(field('Polling (s)', pollInput));
+        card.appendChild(grid);
+
+        const checks = document.createElement('div');
+        checks.className = 'op-grid';
+
+        const enabledWrap = document.createElement('label');
+        enabledWrap.className = 'op-check';
+        const enabledInput = document.createElement('input');
+        enabledInput.type = 'checkbox';
+        enabledInput.checked = printer.enabled !== false;
+        enabledInput.addEventListener('change', () => {
+          printer.enabled = enabledInput.checked;
+        });
+        enabledWrap.appendChild(enabledInput);
+        enabledWrap.appendChild(document.createTextNode('Activée'));
+        checks.appendChild(enabledWrap);
+
+        const invertWrap = document.createElement('label');
+        invertWrap.className = 'op-check';
+        const invertInput = document.createElement('input');
+        invertInput.type = 'checkbox';
+        invertInput.checked = printer.invertState === true;
+        invertInput.addEventListener('change', () => {
+          printer.invertState = invertInput.checked;
+        });
+        invertWrap.appendChild(invertInput);
+        invertWrap.appendChild(document.createTextNode("Inverser l'état"));
+        checks.appendChild(invertWrap);
+        card.appendChild(checks);
+
+        const actions = document.createElement('div');
+        actions.className = 'op-actions';
+        const testBtn = document.createElement('button');
+        testBtn.type = 'button';
+        testBtn.className = 'op-btn op-btn-secondary';
+        testBtn.textContent = 'Tester la connexion';
+        const status = document.createElement('div');
+        status.className = 'op-status';
+
+        testBtn.addEventListener('click', async () => {
+          status.className = 'op-status busy';
+          status.textContent = 'Test en cours…';
+          try {
+            const result = await homebridge.request('/test-connection', {
+              url: printer.octoprintUrl,
+              apiKey: printer.apiKey,
+            });
+            status.className = 'op-status ok';
+            status.textContent = result.operational
+              ? `Connecté. État: ${result.text}${result.printing ? ' (en impression)' : ''}.`
+              : `Connecté à OctoPrint. Imprimante non opérationnelle (${result.text}).`;
+          } catch (e) {
+            status.className = 'op-status err';
+            status.textContent = (e && e.message) ? e.message : 'Échec du test de connexion.';
+          }
+        });
+
+        actions.appendChild(testBtn);
+        card.appendChild(actions);
+        card.appendChild(status);
+        return card;
+      }
+
+      function persistToForm() {
+        config.printers = printers;
+        return homebridge.updatePluginConfig([config]);
+      }
+
+      document.getElementById('op-add').addEventListener('click', async () => {
+        printers.push(newPrinter(printers.length + 1));
+        render();
+        await persistToForm();
+      });
+
+      document.getElementById('op-save').addEventListener('click', async () => {
+        globalStatus.className = 'op-status busy';
+        globalStatus.textContent = 'Enregistrement…';
+        try {
+          await persistToForm();
+          await homebridge.savePluginConfig();
+          globalStatus.className = 'op-status ok';
+          globalStatus.textContent = 'Configuration enregistrée.';
+        } catch (e) {
+          globalStatus.className = 'op-status err';
+          globalStatus.textContent = (e && e.message) ? e.message : "Échec de l'enregistrement.";
+        }
+      });
+
+      render();
+      await persistToForm();
+      homebridge.showSchemaForm ? null : null;
+    })();
+  </script>
+</body>
+</html>
