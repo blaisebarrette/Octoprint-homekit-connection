@@ -1,4 +1,3 @@
-import { OccupancySensorRequirements } from '@matter/main/devices/occupancy-sensor';
 import type { Logging } from 'homebridge';
 
 import {
@@ -50,8 +49,23 @@ export class OctoPrintMatterStatusAccessory {
     }
     // OccupancySensorDevice only includes Identify by default; OccupancySensing
     // must be added explicitly with a supported feature (see matter.js docs).
+    // The server class is sourced from the device type's own requirements
+    // (Homebridge's matter.js instance) instead of importing @matter/main:
+    // bundling a second matter.js copy breaks plugin loading under
+    // --strict-plugin-resolution and risks dual-instance conflicts.
+    const occupancySensingServer = (
+      base as {
+        requirements?: { OccupancySensingServer?: { with: (...features: unknown[]) => unknown } };
+      }
+    ).requirements?.OccupancySensingServer;
+    if (!occupancySensingServer || typeof occupancySensingServer.with !== 'function') {
+      this.log.warn(
+        `[${this.printer.sensorName}] OccupancySensing requirement unavailable; sensor may not report state.`,
+      );
+      return base;
+    }
     const withMethod = (base as { with: (...behaviors: unknown[]) => unknown }).with;
-    return withMethod(OccupancySensorRequirements.OccupancySensingServer.with('PassiveInfrared'));
+    return withMethod(occupancySensingServer.with('PassiveInfrared'));
   }
 
   /** Cluster used for state updates. */

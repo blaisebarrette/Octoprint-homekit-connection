@@ -23,6 +23,11 @@ function fakeLog(): Logging {
 function fakeMotionSensorDeviceType() {
   const deviceType = {
     name: 'OccupancySensor',
+    requirements: {
+      OccupancySensingServer: {
+        with: vi.fn((...features: unknown[]) => ({ behavior: 'occupancySensing', features })),
+      },
+    },
     with: vi.fn((...behaviors: unknown[]) => ({
       ...deviceType,
       behaviors,
