@@ -3,51 +3,51 @@
   "pluginType": "platform",
   "singular": true,
   "customUi": true,
-  "headerDisplay": "Expose l'état d'impression de vos imprimantes OctoPrint comme capteurs Matter (occupancy/contact). Une clé API OctoPrint avec la permission STATUS est requise par imprimante.",
-  "footerDisplay": "Activez Matter sur le bridge (ou child bridge) puis appairez le code QR Matter dans Apple Home, Google Home, Alexa ou autre.",
+  "headerDisplay": "Expose your OctoPrint print status as Matter sensors (occupancy/contact). An OctoPrint API key with STATUS permission is required per printer.",
+  "footerDisplay": "Enable Matter on the bridge (or child bridge), then pair the Matter QR code in Apple Home, Google Home, Alexa, or another controller.",
   "schema": {
     "type": "object",
     "properties": {
       "name": {
-        "title": "Nom de la plateforme",
+        "title": "Platform name",
         "type": "string",
         "default": "OctoPrint Matter Status",
         "required": true
       },
       "printers": {
-        "title": "Imprimantes",
+        "title": "Printers",
         "type": "array",
         "items": {
           "type": "object",
           "properties": {
             "id": {
-              "title": "Identifiant",
-              "description": "Identifiant unique et stable (ex: mk3s). Ne pas changer après l'appairage.",
+              "title": "Identifier",
+              "description": "Unique stable identifier (e.g. mk3s). Do not change after pairing.",
               "type": "string",
               "required": true,
               "pattern": "^[A-Za-z0-9._-]+$"
             },
             "sensorName": {
-              "title": "Nom du capteur",
-              "description": "Nom affiché dans Apple Home / Matter (ex: Prusa MK3S Printing).",
+              "title": "Sensor name",
+              "description": "Name shown in Apple Home / Matter (e.g. Prusa MK3S Printing).",
               "type": "string",
               "required": true
             },
             "octoprintUrl": {
-              "title": "URL OctoPrint",
-              "description": "URL complète, ex: http://octopi.local",
+              "title": "OctoPrint URL",
+              "description": "Full URL, e.g. http://octopi.local",
               "type": "string",
               "required": true,
               "format": "uri"
             },
             "apiKey": {
-              "title": "Clé API",
-              "description": "Clé API utilisateur ou application avec permission STATUS.",
+              "title": "API key",
+              "description": "User or application API key with STATUS permission.",
               "type": "string",
               "required": true
             },
             "sensorType": {
-              "title": "Type de capteur",
+              "title": "Sensor type",
               "type": "string",
               "default": "occupancy",
               "oneOf": [
@@ -56,20 +56,20 @@
               ]
             },
             "enabled": {
-              "title": "Activée",
+              "title": "Enabled",
               "type": "boolean",
               "default": true
             },
             "pollIntervalSeconds": {
-              "title": "Intervalle de polling (s)",
+              "title": "Polling interval (s)",
               "type": "integer",
               "default": 10,
               "minimum": 2,
               "maximum": 3600
             },
             "invertState": {
-              "title": "Inverser l'état",
-              "description": "Inverse la détection (impression = inactif).",
+              "title": "Invert state",
+              "description": "Inverts detection (printing = inactive).",
               "type": "boolean",
               "default": false
             }
@@ -77,7 +77,7 @@
         }
       },
       "debug": {
-        "title": "Journaux de débogage",
+        "title": "Debug logging",
         "type": "boolean",
         "default": false
       }

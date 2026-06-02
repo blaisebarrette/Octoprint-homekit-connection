@@ -48,17 +48,16 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Requis par DynamicPlatformPlugin pour les accessoires HAP. Ce plugin
-   * n'expose que des accessoires Matter, donc rien à faire ici.
+   * Required by DynamicPlatformPlugin for HAP accessories. This plugin only
+   * exposes Matter accessories, so nothing to do here.
    */
   configureAccessory(_accessory: PlatformAccessory): void {
-    // No-op: pas d'accessoires HAP.
+    // No-op: no HAP accessories.
   }
 
   /**
-   * Appelé par Homebridge 2 pour ré-injecter les accessoires Matter en cache.
-   * On mémorise leur UUID afin de pouvoir supprimer les accessoires devenus
-   * obsolètes (imprimantes retirées de la configuration).
+   * Called by Homebridge 2 to re-inject cached Matter accessories.
+   * We store their UUIDs so stale accessories (removed printers) can be deleted.
    */
   configureMatterAccessory(accessory: { UUID?: string }): void {
     if (typeof accessory?.UUID === 'string') {
@@ -69,17 +68,17 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
   private getMatterApi(): MatterApi | undefined {
     if (typeof this.api.isMatterEnabled === 'function' && !this.api.isMatterEnabled()) {
       this.log.warn(
-        'Matter n\'est pas activé pour ce bridge. Activez Matter (bridge.matter ou _bridge.matter) pour exposer les capteurs.',
+        'Matter is not enabled for this bridge. Enable Matter (bridge.matter or _bridge.matter) to expose sensors.',
       );
       return undefined;
     }
     if (!this.api.matter) {
       this.log.warn(
-        'API Matter indisponible. Ce plugin requiert Homebridge >= 2.0.0 avec Matter activé.',
+        'Matter API unavailable. This plugin requires Homebridge >= 2.0.0 with Matter enabled.',
       );
       return undefined;
     }
-    // Pont vers notre interface minimale: l'API réelle est un sur-ensemble.
+    // Bridge to our minimal interface: the real API is a superset.
     return this.api.matter as unknown as MatterApi;
   }
 
@@ -97,11 +96,11 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
     const enabled = printers.filter((p) => p.enabled);
     const disabledCount = printers.length - enabled.length;
     if (disabledCount > 0) {
-      this.log.info(`${disabledCount} imprimante(s) désactivée(s) ignorée(s).`);
+      this.log.info(`${disabledCount} disabled printer(s) skipped.`);
     }
 
     if (enabled.length === 0) {
-      this.log.warn('Aucune imprimante activée à exposer. Vérifiez la configuration du plugin.');
+      this.log.warn('No enabled printers to expose. Check the plugin configuration.');
       return;
     }
 
@@ -115,7 +114,7 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
         });
       } catch (error) {
         this.log.error(
-          `[${printerConfig.sensorName}] configuration invalide: ${
+          `[${printerConfig.sensorName}] invalid configuration: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
@@ -128,16 +127,16 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
     }
 
     if (definitions.length === 0) {
-      this.log.warn('Aucune imprimante valide à exposer après validation.');
+      this.log.warn('No valid printers to expose after validation.');
       return;
     }
 
     try {
       await matter.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, definitions);
-      this.log.info(`${definitions.length} capteur(s) Matter enregistré(s).`);
+      this.log.info(`${definitions.length} Matter sensor(s) registered.`);
     } catch (error) {
       this.log.error(
-        `Échec de l'enregistrement des accessoires Matter: ${
+        `Failed to register Matter accessories: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -151,7 +150,7 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
     }
   }
 
-  /** Supprime les accessoires Matter en cache qui ne sont plus configurés. */
+  /** Removes cached Matter accessories that are no longer configured. */
   private async removeStaleAccessories(matter: MatterApi): Promise<void> {
     const activeUuids = new Set(this.running.map((p) => p.accessory.uuid));
     const stale = [...this.restoredUuids].filter((uuid) => !activeUuids.has(uuid));
@@ -164,10 +163,10 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
         PLATFORM_NAME,
         stale.map((UUID) => ({ UUID })),
       );
-      this.log.info(`${stale.length} capteur(s) obsolète(s) supprimé(s).`);
+      this.log.info(`${stale.length} stale sensor(s) removed.`);
     } catch (error) {
       this.log.warn(
-        `Impossible de supprimer des accessoires obsolètes: ${
+        `Could not remove stale accessories: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -176,12 +175,12 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
 
   private startPolling(printer: RunningPrinter): void {
     const intervalMs = printer.config.pollIntervalSeconds * 1000;
-    // Premier relevé immédiat, puis polling périodique isolé par imprimante.
+    // First poll immediately, then per-printer periodic polling.
     void this.pollOnce(printer);
     printer.timer = setInterval(() => {
       void this.pollOnce(printer);
     }, intervalMs);
-    // Ne pas bloquer l'arrêt du process à cause du timer.
+    // Do not block process shutdown because of the timer.
     printer.timer.unref?.();
   }
 
@@ -195,11 +194,11 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
       await printer.accessory.applyActive(active);
     } catch (error) {
       if (error instanceof OctoPrintError) {
-        // On conserve le dernier état connu pour éviter le flapping du capteur.
-        this.log.warn(`[${printer.config.sensorName}] relevé ignoré (${error.kind}): ${error.message}`);
+        // Keep last known state to avoid sensor flapping.
+        this.log.warn(`[${printer.config.sensorName}] poll skipped (${error.kind}): ${error.message}`);
       } else {
         this.log.error(
-          `[${printer.config.sensorName}] erreur inattendue: ${
+          `[${printer.config.sensorName}] unexpected error: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );

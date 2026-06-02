@@ -1,18 +1,14 @@
-/**
- * Identifiant npm du plugin. Doit correspondre au champ "name" de package.json.
- */
+/** npm plugin identifier. Must match the "name" field in package.json. */
 export const PLUGIN_NAME = 'homebridge-octoprint-matter-status';
 
-/**
- * Nom de la plateforme tel qu'utilisé dans config.json et config.schema.json.
- */
+/** Platform name as used in config.json and config.schema.json. */
 export const PLATFORM_NAME = 'OctoPrintMatterStatus';
 
-/** Intervalle de polling par défaut, en secondes. */
+/** Default polling interval, in seconds. */
 export const DEFAULT_POLL_INTERVAL_SECONDS = 10;
 
-/** Intervalle de polling minimal accepté, pour éviter de marteler OctoPrint. */
+/** Minimum accepted polling interval to avoid hammering OctoPrint. */
 export const MIN_POLL_INTERVAL_SECONDS = 2;
 
-/** Délai d'expiration par défaut d'une requête OctoPrint, en millisecondes. */
+/** Default OctoPrint request timeout, in milliseconds. */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 5000;

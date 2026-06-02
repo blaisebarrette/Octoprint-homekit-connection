@@ -3,17 +3,17 @@ import { HomebridgePluginUiServer, RequestError } from '@homebridge/plugin-ui-ut
 const REQUEST_TIMEOUT_MS = 5000;
 
 /**
- * Normalise l'URL OctoPrint (protocole obligatoire, slash final retiré).
+ * Normalizes the OctoPrint URL (protocol required, trailing slash removed).
  */
 function normalizeBaseUrl(rawUrl) {
   let parsed;
   try {
     parsed = new URL(rawUrl);
   } catch {
-    throw new RequestError('URL OctoPrint invalide. Exemple: http://octopi.local', { status: 400 });
+    throw new RequestError('Invalid OctoPrint URL. Example: http://octopi.local', { status: 400 });
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new RequestError('Protocole non supporté (http/https requis).', { status: 400 });
+    throw new RequestError('Unsupported protocol (http/https required).', { status: 400 });
   }
   return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}`;
 }
@@ -26,15 +26,15 @@ class OctoPrintMatterStatusUiServer extends HomebridgePluginUiServer {
   }
 
   /**
-   * Teste la connexion à une instance OctoPrint depuis le serveur du plugin,
-   * afin de ne jamais exposer la clé API directement au navigateur.
+   * Tests connectivity to an OctoPrint instance from the plugin server,
+   * so the API key is never exposed directly to the browser.
    */
   async testConnection(payload) {
     const url = typeof payload?.url === 'string' ? payload.url.trim() : '';
     const apiKey = typeof payload?.apiKey === 'string' ? payload.apiKey.trim() : '';
 
     if (!url || !apiKey) {
-      throw new RequestError('URL et clé API requises.', { status: 400 });
+      throw new RequestError('URL and API key are required.', { status: 400 });
     }
 
     const endpoint = `${normalizeBaseUrl(url)}/api/printer`;
@@ -51,8 +51,8 @@ class OctoPrintMatterStatusUiServer extends HomebridgePluginUiServer {
     } catch (error) {
       throw new RequestError(
         error?.name === 'AbortError'
-          ? `Délai dépassé en contactant ${endpoint}.`
-          : `OctoPrint injoignable: ${error?.message ?? error}`,
+          ? `Timed out contacting ${endpoint}.`
+          : `OctoPrint unreachable: ${error?.message ?? error}`,
         { status: 502 },
       );
     } finally {
@@ -60,23 +60,23 @@ class OctoPrintMatterStatusUiServer extends HomebridgePluginUiServer {
     }
 
     if (response.status === 401 || response.status === 403) {
-      throw new RequestError('Clé API refusée (permission STATUS manquante ?).', { status: 401 });
+      throw new RequestError('API key rejected (missing STATUS permission?).', { status: 401 });
     }
 
-    // 409 = imprimante non opérationnelle: la connexion OctoPrint fonctionne.
+    // 409 = printer not operational: OctoPrint connectivity still works.
     if (response.status === 409) {
       return { ok: true, operational: false, printing: false, text: 'Offline' };
     }
 
     if (!response.ok) {
-      throw new RequestError(`Réponse HTTP inattendue: ${response.status}.`, { status: 502 });
+      throw new RequestError(`Unexpected HTTP response: ${response.status}.`, { status: 502 });
     }
 
     let data;
     try {
       data = await response.json();
     } catch {
-      throw new RequestError('Réponse JSON invalide depuis OctoPrint.', { status: 502 });
+      throw new RequestError('Invalid JSON response from OctoPrint.', { status: 502 });
     }
 
     const flags = data?.state?.flags ?? {};
@@ -84,7 +84,7 @@ class OctoPrintMatterStatusUiServer extends HomebridgePluginUiServer {
       ok: true,
       operational: flags.operational === true,
       printing: flags.printing === true,
-      text: data?.state?.text ?? 'Inconnu',
+      text: data?.state?.text ?? 'Unknown',
     };
   }
 }

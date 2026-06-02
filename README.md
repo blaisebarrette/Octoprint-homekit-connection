@@ -1,42 +1,42 @@
 # OctoPrint Matter Status
 
-Plugin [Homebridge](https://homebridge.io) 2 qui expose l’état d’impression de vos imprimantes [OctoPrint](https://octoprint.org/) comme capteurs **Matter**. Chaque imprimante apparaît dans Apple Home, Google Home, Amazon Alexa, Home Assistant ou tout autre contrôleur Matter compatible — avec le nom que vous choisissez.
+[Homebridge](https://homebridge.io) 2 plugin that exposes your [OctoPrint](https://octoprint.org/) print status as **Matter** sensors. Each printer appears in Apple Home, Google Home, Amazon Alexa, Home Assistant, or any other Matter-compatible controller — with the name you choose.
 
-**Paquet npm :** `homebridge-octoprint-matter-status`
+**npm package:** `homebridge-octoprint-matter-status`
 
-## Fonctionnement
+## How it works
 
-| État OctoPrint | Capteur Matter (défaut : occupancy) |
-|----------------|-------------------------------------|
-| Impression en cours (`flags.printing` ou transitions pausing/cancelling/finishing) | Détecté / occupé |
-| Idle, opérationnel, pas en impression | Inactif |
-| OctoPrint injoignable | Dernier état conservé (pas de bascule intempestive) |
+| OctoPrint state | Matter sensor (default: occupancy) |
+|-----------------|-------------------------------------|
+| Printing (`flags.printing` or pausing/cancelling/finishing transitions) | Detected / occupied |
+| Idle, operational, not printing | Inactive |
+| OctoPrint unreachable | Last known state kept (no spurious toggling) |
 
-Le plugin interroge OctoPrint via `GET /api/printer` (polling configurable). Aucune modification côté serveur OctoPrint n’est requise.
+The plugin polls OctoPrint via `GET /api/printer` (configurable interval). No changes are required on the OctoPrint server.
 
-## Prérequis
+## Requirements
 
-- **Homebridge** ≥ 2.0.0 avec **Matter activé** sur le bridge principal ou sur un child bridge (`bridge.matter` ou `_bridge.matter`)
-- **Node.js** 22 ou 24 (LTS)
-- Une ou plusieurs instances **OctoPrint** accessibles depuis le réseau où tourne Homebridge
-- Une **clé API** OctoPrint par imprimante, avec au minimum la permission **STATUS** (clé utilisateur ou Application Key — pas la clé globale dépréciée)
+- **Homebridge** ≥ 2.0.0 with **Matter enabled** on the main bridge or a child bridge (`bridge.matter` or `_bridge.matter`)
+- **Node.js** 22 or 24 (LTS)
+- One or more **OctoPrint** instances reachable from the network where Homebridge runs
+- An **API key** per printer with at least **STATUS** permission (user key or Application Key — not the deprecated global key)
 
 ## Installation
 
 ### Via Homebridge Config UI X
 
-1. Installez le plugin depuis l’onglet **Plugins** (une fois publié sur npm), ou en mode développement :
+1. Install the plugin from the **Plugins** tab (once published on npm), or in development mode:
 
    ```bash
    cd /path/to/homebridge
-   npm install -g /chemin/vers/homebridge-octoprint-matter-status
+   npm install -g /path/to/homebridge-octoprint-matter-status
    ```
 
-2. Redémarrez Homebridge.
+2. Restart Homebridge.
 
-3. Ajoutez la plateforme **OctoPrint Matter Status** dans la configuration.
+3. Add the **OctoPrint Matter Status** platform to your configuration.
 
-### Configuration manuelle (`config.json`)
+### Manual configuration (`config.json`)
 
 ```json
 {
@@ -50,7 +50,7 @@ Le plugin interroge OctoPrint via `GET /api/printer` (polling configurable). Auc
           "id": "mk3s",
           "sensorName": "Prusa MK3S Printing",
           "octoprintUrl": "http://octopi.local",
-          "apiKey": "VOTRE_CLE_API",
+          "apiKey": "YOUR_API_KEY",
           "sensorType": "occupancy",
           "enabled": true,
           "pollIntervalSeconds": 10,
@@ -62,89 +62,89 @@ Le plugin interroge OctoPrint via `GET /api/printer` (polling configurable). Auc
 }
 ```
 
-> **Migration** : si vous utilisiez une version antérieure avec `"platform": "OctoPrintMatter"`, remplacez par `"OctoPrintMatterStatus"` et réappairez Matter si les capteurs ne réapparaissent pas (l’UUID Matter a changé).
+> **Migration:** if you used an older version with `"platform": "OctoPrintMatter"`, replace it with `"OctoPrintMatterStatus"` and re-pair Matter if sensors do not reappear (the Matter UUID changed).
 
-## Configuration dans l’interface
+## Configuration UI
 
-Le plugin fournit une **interface dédiée** dans Homebridge Config UI X :
+The plugin provides a **dedicated interface** in Homebridge Config UI X:
 
-- Ajouter / supprimer des imprimantes
-- **Nom du capteur** (`sensorName`) — nom affiché dans HomeKit / Matter au premier appairage
-- URL OctoPrint et clé API (masquée)
-- Type de capteur : **Occupancy / Motion** (recommandé) ou **Contact**
-- Intervalle de polling, activation, inversion d’état
-- Bouton **Tester la connexion** par imprimante (la clé API n’est jamais envoyée au navigateur ; le test passe par le serveur du plugin)
+- Add / remove printers
+- **Sensor name** (`sensorName`) — name shown in HomeKit / Matter on first pairing
+- OctoPrint URL and API key (masked)
+- Sensor type: **Occupancy / Motion** (recommended) or **Contact**
+- Polling interval, enable/disable, state inversion
+- **Test connection** button per printer (the API key is never sent to the browser; the test goes through the plugin server)
 
-### Champs par imprimante
+### Fields per printer
 
-| Champ | Description |
+| Field | Description |
 |-------|-------------|
-| `id` | Identifiant unique et **stable** (ex. `mk3s`). Ne pas le modifier après l’appairage Matter. |
-| `sensorName` | Nom du capteur dans les apps domotiques (ex. `Voron 2.4 Printing`). |
-| `octoprintUrl` | URL complète, ex. `http://192.168.1.50` ou `http://octopi.local`. |
-| `apiKey` | Clé API OctoPrint (permission STATUS). |
-| `sensorType` | `occupancy` (défaut) ou `contact`. |
-| `enabled` | Désactiver temporairement sans supprimer l’entrée. |
-| `pollIntervalSeconds` | Fréquence de lecture (min. 2 s, défaut 10). |
-| `invertState` | Inverser actif/inactif si besoin pour des automatisations. |
+| `id` | Unique **stable** identifier (e.g. `mk3s`). Do not change after Matter pairing. |
+| `sensorName` | Sensor name in smart home apps (e.g. `Voron 2.4 Printing`). |
+| `octoprintUrl` | Full URL, e.g. `http://192.168.1.50` or `http://octopi.local`. |
+| `apiKey` | OctoPrint API key (STATUS permission). |
+| `sensorType` | `occupancy` (default) or `contact`. |
+| `enabled` | Temporarily disable without removing the entry. |
+| `pollIntervalSeconds` | Poll frequency (min. 2 s, default 10). |
+| `invertState` | Invert active/inactive if needed for automations. |
 
-## Clé API OctoPrint
+## OctoPrint API key
 
-1. Dans OctoPrint : **Paramètres** → **Clés API** (ou **Application Keys**).
-2. Créez une clé avec la permission **STATUS** (lecture de l’état imprimante).
-3. Collez-la dans la configuration du plugin.
+1. In OctoPrint: **Settings** → **API Keys** (or **Application Keys**).
+2. Create a key with **STATUS** permission (read printer state).
+3. Paste it into the plugin configuration.
 
-Référence : [OctoPrint API — General information](https://docs.octoprint.org/en/master/api/general.html)
+Reference: [OctoPrint API — General information](https://docs.octoprint.org/en/master/api/general.html)
 
-## Activer Matter et appairer
+## Enable Matter and pair
 
-1. Dans Homebridge Config UI X, activez **Matter** sur le bridge qui héberge ce plugin (ou sur le child bridge dédié).
-2. Redémarrez le bridge.
-3. Scannez le **code QR Matter** affiché par Homebridge dans l’app de votre choix (Maison, Google Home, etc.).
-4. Chaque imprimante configurée et activée apparaît comme un capteur nommé selon `sensorName`.
+1. In Homebridge Config UI X, enable **Matter** on the bridge hosting this plugin (or on a dedicated child bridge).
+2. Restart the bridge.
+3. Scan the **Matter QR code** shown by Homebridge in your app of choice (Home, Google Home, etc.).
+4. Each configured and enabled printer appears as a sensor named according to `sensorName`.
 
-> Matter et HomeKit via Homebridge sont des appairages **séparés**. Les capteurs Matter ne s’affichent pas dans l’écran accessoires classique de Homebridge ; ils sont gérés par le contrôleur Matter.
+> Matter and HomeKit via Homebridge are **separate** pairings. Matter sensors do not appear in Homebridge’s classic accessories screen; they are managed by the Matter controller.
 
-## Types de capteurs
+## Sensor types
 
-- **Occupancy / Motion** (défaut) — adapté à « l’imprimante est en train d’imprimer ».
-- **Contact** — sémantique ouvert/fermé Matter inversée côté protocole ; utile si votre écosystème le préfère.
+- **Occupancy / Motion** (default) — suited for “the printer is printing”.
+- **Contact** — open/closed Matter semantics inverted at the protocol level; useful if your ecosystem prefers it.
 
-## Développement
+## Development
 
 ```bash
 git clone https://github.com/blaisebarrette/Octoprint-homekit-connection.git
 cd Octoprint-homekit-connection
 npm install
-npm run build      # compile vers dist/
-npm test           # tests unitaires
+npm run build      # compile to dist/
+npm test           # unit tests
 npm run lint
 npm run typecheck
 ```
 
-Lien symbolique pour tester localement dans Homebridge :
+Symlink for local testing in Homebridge:
 
 ```bash
 npm link
-# puis dans le répertoire Homebridge :
+# then in your Homebridge directory:
 npm link homebridge-octoprint-matter-status
 ```
 
-## Dépannage
+## Troubleshooting
 
-| Symptôme | Piste |
-|----------|--------|
-| Aucun capteur dans Matter | Vérifier que Matter est activé sur le bon bridge et redémarrer. |
-| « Matter n’est pas activé » dans les logs | Ajouter `matter: true` (ou bloc `matter` selon votre version HB) au bridge. |
-| Test de connexion : 401/403 | Clé API invalide ou permission STATUS manquante. |
-| Test OK mais capteur toujours inactif | Vérifier qu’une impression est bien en cours (`flags.printing`). |
-| Capteur qui change de nom après renommage | Le nom Matter est fixé à l’appairage ; modifier `sensorName` peut nécessiter de retirer/réajouter le capteur côté contrôleur. |
+| Symptom | Fix |
+|---------|-----|
+| No sensors in Matter | Verify Matter is enabled on the correct bridge and restart. |
+| “Matter is not enabled” in logs | Add `matter: true` (or a `matter` block depending on your HB version) to the bridge. |
+| Connection test: 401/403 | Invalid API key or missing STATUS permission. |
+| Test OK but sensor always inactive | Verify a print is actually running (`flags.printing`). |
+| Sensor name changes after rename | Matter name is fixed at pairing; changing `sensorName` may require removing/re-adding the sensor in the controller. |
 
-## Licence
+## License
 
-MIT — voir `package.json`.
+MIT — see `package.json`.
 
-## Crédits
+## Credits
 
-- [Homebridge](https://homebridge.io) et l’API Matter v2
+- [Homebridge](https://homebridge.io) and the Matter v2 API
 - [OctoPrint](https://octoprint.org/) API

@@ -10,13 +10,12 @@ import type { MatterAccessoryDefinition, MatterApi, PrinterConfig } from './type
 const OCCUPANCY_CLUSTER = 'OccupancySensing';
 const BOOLEAN_STATE_CLUSTER = 'BooleanState';
 
-/** Préfixe UUID Matter stable pour ce plugin (ne pas modifier après appairage). */
+/** Stable Matter UUID namespace for this plugin (do not change after pairing). */
 export const MATTER_UUID_NAMESPACE = 'octoprint-matter-status';
 
 /**
- * Représente le capteur Matter d'une imprimante. Encapsule la génération de
- * l'UUID stable, la définition de l'accessoire et l'application des mises à jour
- * d'état (en évitant les écritures redondantes).
+ * Represents a printer's Matter sensor. Encapsulates stable UUID generation,
+ * accessory definition, and state updates (avoiding redundant writes).
  */
 export class OctoPrintMatterStatusAccessory {
   public readonly uuid: string;
@@ -28,22 +27,22 @@ export class OctoPrintMatterStatusAccessory {
     private readonly printer: PrinterConfig,
     private readonly log: Logging,
   ) {
-    // UUID déterministe basé sur l'id (stable même si l'URL change).
+    // Deterministic UUID from id (stable even if URL changes).
     this.uuid = this.matter.uuid.generate(`${MATTER_UUID_NAMESPACE}:${printer.id}`);
   }
 
-  /** Type de capteur Matter sous-jacent (occupancy par défaut). */
+  /** Underlying Matter sensor type (occupancy by default). */
   private resolveDeviceType(): unknown {
     const types = this.matter.deviceTypes;
     if (this.printer.sensorType === 'contact') {
       return types.ContactSensor;
     }
-    // matter.js nomme parfois ce type "MotionSensor"; il s'affiche en
-    // OccupancySensor dans les contrôleurs. On gère les deux noms.
+    // matter.js sometimes names this "MotionSensor"; controllers show
+    // OccupancySensor. We handle both names.
     return types.OccupancySensor ?? types.MotionSensor;
   }
 
-  /** Cluster utilisé pour les mises à jour d'état. */
+  /** Cluster used for state updates. */
   private resolveClusterName(): string {
     const names = this.matter.clusterNames;
     if (this.printer.sensorType === 'contact') {
@@ -52,13 +51,13 @@ export class OctoPrintMatterStatusAccessory {
     return names.OccupancySensing ?? OCCUPANCY_CLUSTER;
   }
 
-  /** Construit la définition d'accessoire à enregistrer auprès de Homebridge. */
+  /** Builds the accessory definition to register with Homebridge. */
   buildDefinition(): MatterAccessoryDefinition {
     const clusters: Record<string, unknown> =
       this.printer.sensorType === 'contact'
         ? {
             booleanState: {
-              // true = fermé/normal: état sûr par défaut (pas en impression).
+              // true = closed/normal: safe default state (not printing).
               stateValue: true,
             },
           }
@@ -86,8 +85,8 @@ export class OctoPrintMatterStatusAccessory {
   }
 
   /**
-   * Applique l'état « actif » (en impression) au capteur Matter. N'écrit que
-   * lorsque l'état effectif change pour éviter le bruit côté contrôleurs.
+   * Applies "active" (printing) state to the Matter sensor. Only writes when
+   * the effective state changes to reduce noise on controllers.
    */
   async applyActive(active: boolean): Promise<void> {
     const occupied = computeOccupied(active, this.printer.invertState);
@@ -104,7 +103,7 @@ export class OctoPrintMatterStatusAccessory {
 
     await this.matter.updateAccessoryState(this.uuid, cluster, attributes);
     this.log.debug(
-      `[${this.printer.sensorName}] état mis à jour: ${occupied ? 'actif' : 'inactif'}.`,
+      `[${this.printer.sensorName}] state updated: ${occupied ? 'active' : 'inactive'}.`,
     );
   }
 }

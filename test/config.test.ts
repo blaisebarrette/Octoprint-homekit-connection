@@ -3,19 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { normalizePrinters } from '../src/config';
 
 describe('normalizePrinters', () => {
-  it('retourne vide quand printers est absent', () => {
+  it('returns empty when printers is absent', () => {
     const result = normalizePrinters(undefined);
     expect(result.printers).toEqual([]);
     expect(result.errors).toEqual([]);
   });
 
-  it('signale une erreur si printers n\'est pas un tableau', () => {
+  it('reports an error if printers is not an array', () => {
     const result = normalizePrinters({ not: 'an array' });
     expect(result.printers).toHaveLength(0);
-    expect(result.errors[0]).toMatch(/liste/);
+    expect(result.errors[0]).toMatch(/array/);
   });
 
-  it('normalise une imprimante valide avec les valeurs par défaut', () => {
+  it('normalizes a valid printer with default values', () => {
     const result = normalizePrinters([
       {
         id: 'mk3s',
@@ -39,14 +39,14 @@ describe('normalizePrinters', () => {
     ]);
   });
 
-  it('signale les champs requis manquants', () => {
+  it('reports missing required fields', () => {
     const result = normalizePrinters([{ id: 'x', sensorName: 'X' }]);
     expect(result.printers).toHaveLength(0);
     expect(result.errors[0]).toMatch(/octoprintUrl/);
     expect(result.errors[0]).toMatch(/apiKey/);
   });
 
-  it('détecte les id dupliqués et ignore le doublon', () => {
+  it('detects duplicate ids and ignores the duplicate', () => {
     const base = {
       sensorName: 'A',
       octoprintUrl: 'http://a.local',
@@ -58,10 +58,10 @@ describe('normalizePrinters', () => {
     ]);
     expect(result.printers).toHaveLength(1);
     expect(result.printers[0].sensorName).toBe('A');
-    expect(result.errors.some((e) => /dupliqué/.test(e))).toBe(true);
+    expect(result.errors.some((e) => /duplicate/.test(e))).toBe(true);
   });
 
-  it('applique le minimum de polling et arrondit', () => {
+  it('applies minimum polling and rounds', () => {
     const result = normalizePrinters([
       {
         id: 'p',
@@ -74,7 +74,7 @@ describe('normalizePrinters', () => {
     expect(result.printers[0].pollIntervalSeconds).toBe(2);
   });
 
-  it('conserve les imprimantes désactivées (filtrage fait ailleurs)', () => {
+  it('keeps disabled printers (filtering done elsewhere)', () => {
     const result = normalizePrinters([
       {
         id: 'p',

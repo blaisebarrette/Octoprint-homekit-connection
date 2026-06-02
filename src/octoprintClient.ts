@@ -1,10 +1,10 @@
 import { DEFAULT_REQUEST_TIMEOUT_MS } from './settings';
 import type { OctoPrintPrinterState } from './types';
 
-/** Catégories d'erreurs distinguées par le client OctoPrint. */
+/** Error categories distinguished by the OctoPrint client. */
 export type OctoPrintErrorKind = 'config' | 'auth' | 'network' | 'http' | 'parse';
 
-/** Erreur typée permettant à l'appelant de réagir selon la cause. */
+/** Typed error allowing the caller to react based on cause. */
 export class OctoPrintError extends Error {
   public readonly kind: OctoPrintErrorKind;
   public readonly status?: number;
@@ -21,13 +21,13 @@ export interface OctoPrintClientOptions {
   url: string;
   apiKey: string;
   timeoutMs?: number;
-  /** Implémentation de fetch injectable (facilite les tests). */
+  /** Injectable fetch implementation (helps testing). */
   fetchImpl?: typeof fetch;
 }
 
 /**
- * Normalise une URL OctoPrint: vérifie le protocole et retire le slash final.
- * Lève une `OctoPrintError` de type `config` si l'URL est invalide.
+ * Normalizes an OctoPrint URL: validates protocol and strips trailing slash.
+ * Throws a `config` `OctoPrintError` if the URL is invalid.
  */
 export function normalizeBaseUrl(rawUrl: string): string {
   let parsed: URL;
@@ -35,14 +35,14 @@ export function normalizeBaseUrl(rawUrl: string): string {
     parsed = new URL(rawUrl);
   } catch {
     throw new OctoPrintError(
-      `URL OctoPrint invalide: "${rawUrl}". Exemple attendu: http://octopi.local`,
+      `Invalid OctoPrint URL: "${rawUrl}". Expected example: http://octopi.local`,
       'config',
     );
   }
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     throw new OctoPrintError(
-      `URL OctoPrint invalide: protocole "${parsed.protocol}" non supporté (http/https requis).`,
+      `Invalid OctoPrint URL: protocol "${parsed.protocol}" not supported (http/https required).`,
       'config',
     );
   }
@@ -50,7 +50,7 @@ export function normalizeBaseUrl(rawUrl: string): string {
   return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}`;
 }
 
-/** Client minimal pour interroger l'état d'une instance OctoPrint. */
+/** Minimal client to query an OctoPrint instance state. */
 export class OctoPrintClient {
   private readonly baseUrl: string;
   private readonly apiKey: string;
@@ -65,7 +65,7 @@ export class OctoPrintClient {
     const candidate = options.fetchImpl ?? globalThis.fetch;
     if (typeof candidate !== 'function') {
       throw new OctoPrintError(
-        'Aucune implémentation de fetch disponible (Node 18+ requis).',
+        'No fetch implementation available (Node 18+ required).',
         'config',
       );
     }
@@ -73,11 +73,11 @@ export class OctoPrintClient {
   }
 
   /**
-   * Récupère l'état courant de l'imprimante via `GET /api/printer`.
+   * Fetches current printer state via `GET /api/printer`.
    *
-   * Cas particulier: OctoPrint renvoie 409 quand l'imprimante n'est pas
-   * opérationnelle (déconnectée). On traduit cela en un état « non en
-   * impression » plutôt qu'en erreur, car c'est une situation normale.
+   * Special case: OctoPrint returns 409 when the printer is not operational
+   * (disconnected). We map that to a "not printing" state rather than an error,
+   * because it is a normal situation.
    */
   async getPrinterState(): Promise<OctoPrintPrinterState> {
     const endpoint = `${this.baseUrl}/api/printer`;
@@ -97,12 +97,12 @@ export class OctoPrintClient {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new OctoPrintError(
-          `Délai dépassé (${this.timeoutMs} ms) en contactant ${endpoint}.`,
+          `Timed out (${this.timeoutMs} ms) contacting ${endpoint}.`,
           'network',
         );
       }
       throw new OctoPrintError(
-        `OctoPrint injoignable à ${endpoint}: ${
+        `OctoPrint unreachable at ${endpoint}: ${
           error instanceof Error ? error.message : String(error)
         }`,
         'network',
@@ -113,20 +113,20 @@ export class OctoPrintClient {
 
     if (response.status === 401 || response.status === 403) {
       throw new OctoPrintError(
-        'Authentification refusée par OctoPrint (clé API invalide ou permission STATUS manquante).',
+        'Authentication rejected by OctoPrint (invalid API key or missing STATUS permission).',
         'auth',
         response.status,
       );
     }
 
-    // Imprimante non opérationnelle: ce n'est pas une erreur, juste pas en impression.
+    // Printer not operational: not an error, just not printing.
     if (response.status === 409) {
       return { state: { text: 'Offline', flags: { operational: false, printing: false } } };
     }
 
     if (!response.ok) {
       throw new OctoPrintError(
-        `Réponse HTTP inattendue d'OctoPrint: ${response.status} ${response.statusText}.`,
+        `Unexpected HTTP response from OctoPrint: ${response.status} ${response.statusText}.`,
         'http',
         response.status,
       );
@@ -137,7 +137,7 @@ export class OctoPrintClient {
       data = await response.json();
     } catch (error) {
       throw new OctoPrintError(
-        `Réponse JSON invalide d'OctoPrint: ${
+        `Invalid JSON response from OctoPrint: ${
           error instanceof Error ? error.message : String(error)
         }`,
         'parse',
@@ -145,7 +145,7 @@ export class OctoPrintClient {
     }
 
     if (typeof data !== 'object' || data === null) {
-      throw new OctoPrintError('Réponse OctoPrint inattendue: objet attendu.', 'parse');
+      throw new OctoPrintError('Unexpected OctoPrint response: expected object.', 'parse');
     }
 
     return data as OctoPrintPrinterState;

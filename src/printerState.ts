@@ -1,12 +1,11 @@
 import type { OctoPrintPrinterState } from './types';
 
 /**
- * Détermine si l'imprimante est en cours d'impression.
+ * Determines whether the printer is currently printing.
  *
- * On considère l'imprimante « active » dès qu'un travail est en cours, ce qui
- * inclut les états transitoires (mise en pause, annulation, reprise, fin) tant
- * que la tête est encore en mouvement. La pause complète (`paused`) n'est pas
- * considérée comme active.
+ * The printer is considered "active" while a job is in progress, including
+ * transitional states (pausing, cancelling, resuming, finishing) while the tool
+ * head is still moving. Full pause (`paused`) is not considered active.
  */
 export function isPrinterActive(state: OctoPrintPrinterState | undefined): boolean {
   const flags = state?.state?.flags;
@@ -22,25 +21,22 @@ export function isPrinterActive(state: OctoPrintPrinterState | undefined): boole
   );
 }
 
-/**
- * Applique l'option d'inversion à l'état actif pour obtenir l'état « occupé »
- * exposé au capteur.
- */
+/** Applies invert option to the active state to obtain the "occupied" sensor state. */
 export function computeOccupied(active: boolean, invert: boolean): boolean {
   return invert ? !active : active;
 }
 
-/** Charge utile de mise à jour pour le cluster OccupancySensing. */
+/** Update payload for the OccupancySensing cluster. */
 export function occupancyUpdate(occupied: boolean): Record<string, unknown> {
   return { occupancy: { occupied } };
 }
 
 /**
- * Charge utile de mise à jour pour le cluster BooleanState (capteur de contact).
+ * Update payload for the BooleanState cluster (contact sensor).
  *
- * Sémantique Matter inversée: `stateValue === true` signifie contact fermé /
- * état normal, `false` signifie déclenché. On déclenche donc le capteur quand
- * l'imprimante est « occupée » (en impression).
+ * Inverted Matter semantics: `stateValue === true` means closed contact /
+ * normal state, `false` means triggered. The sensor triggers when the printer
+ * is "occupied" (printing).
  */
 export function contactUpdate(occupied: boolean): Record<string, unknown> {
   return { stateValue: !occupied };

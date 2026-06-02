@@ -52,13 +52,13 @@ function makePrinter(overrides: Partial<PrinterConfig> = {}): PrinterConfig {
 }
 
 describe('OctoPrintMatterStatusAccessory', () => {
-  it('génère un UUID stable basé sur l\'id', () => {
+  it('generates a stable UUID based on id', () => {
     const { matter } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(matter, makePrinter(), fakeLog());
     expect(acc.uuid).toBe(`uuid:${MATTER_UUID_NAMESPACE}:p1`);
   });
 
-  it('construit une définition occupancy', () => {
+  it('builds an occupancy definition', () => {
     const { matter } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(matter, makePrinter(), fakeLog());
     const def = acc.buildDefinition();
@@ -67,7 +67,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     expect(def.clusters?.occupancySensing).toBeDefined();
   });
 
-  it('construit une définition contact', () => {
+  it('builds a contact definition', () => {
     const { matter } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(
       matter,
@@ -79,7 +79,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     expect(def.clusters?.booleanState).toEqual({ stateValue: true });
   });
 
-  it('met à jour le cluster occupancy quand actif', async () => {
+  it('updates occupancy cluster when active', async () => {
     const { matter, updateAccessoryState } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(matter, makePrinter(), fakeLog());
     await acc.applyActive(true);
@@ -90,7 +90,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     );
   });
 
-  it('n\'écrit pas deux fois pour le même état', async () => {
+  it('does not write twice for the same state', async () => {
     const { matter, updateAccessoryState } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(matter, makePrinter(), fakeLog());
     await acc.applyActive(true);
@@ -98,7 +98,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     expect(updateAccessoryState).toHaveBeenCalledOnce();
   });
 
-  it('applique l\'inversion', async () => {
+  it('applies inversion', async () => {
     const { matter, updateAccessoryState } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(
       matter,
@@ -113,7 +113,7 @@ describe('OctoPrintMatterStatusAccessory', () => {
     );
   });
 
-  it('utilise BooleanState pour un capteur contact', async () => {
+  it('uses BooleanState for a contact sensor', async () => {
     const { matter, updateAccessoryState } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(
       matter,

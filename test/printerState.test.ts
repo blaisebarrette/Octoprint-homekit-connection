@@ -8,25 +8,25 @@ import {
 } from '../src/printerState';
 
 describe('isPrinterActive', () => {
-  it('est faux sans état', () => {
+  it('is false without state', () => {
     expect(isPrinterActive(undefined)).toBe(false);
     expect(isPrinterActive({})).toBe(false);
     expect(isPrinterActive({ state: {} })).toBe(false);
   });
 
-  it('est vrai quand printing', () => {
+  it('is true when printing', () => {
     expect(isPrinterActive({ state: { flags: { printing: true } } })).toBe(true);
   });
 
-  it('est faux quand opérationnel mais pas en impression', () => {
+  it('is false when operational but not printing', () => {
     expect(isPrinterActive({ state: { flags: { operational: true, printing: false } } })).toBe(false);
   });
 
-  it('est faux en pause complète', () => {
+  it('is false when fully paused', () => {
     expect(isPrinterActive({ state: { flags: { paused: true, printing: false } } })).toBe(false);
   });
 
-  it('est vrai pendant les transitions (pausing, cancelling, finishing)', () => {
+  it('is true during transitions (pausing, cancelling, finishing)', () => {
     expect(isPrinterActive({ state: { flags: { pausing: true } } })).toBe(true);
     expect(isPrinterActive({ state: { flags: { cancelling: true } } })).toBe(true);
     expect(isPrinterActive({ state: { flags: { finishing: true } } })).toBe(true);
@@ -34,27 +34,27 @@ describe('isPrinterActive', () => {
 });
 
 describe('computeOccupied', () => {
-  it('renvoie active sans inversion', () => {
+  it('returns active without inversion', () => {
     expect(computeOccupied(true, false)).toBe(true);
     expect(computeOccupied(false, false)).toBe(false);
   });
 
-  it('inverse quand demandé', () => {
+  it('inverts when requested', () => {
     expect(computeOccupied(true, true)).toBe(false);
     expect(computeOccupied(false, true)).toBe(true);
   });
 });
 
-describe('payloads de cluster', () => {
-  it('occupancyUpdate reflète occupied', () => {
+describe('cluster payloads', () => {
+  it('occupancyUpdate reflects occupied', () => {
     expect(occupancyUpdate(true)).toEqual({ occupancy: { occupied: true } });
     expect(occupancyUpdate(false)).toEqual({ occupancy: { occupied: false } });
   });
 
-  it('contactUpdate inverse la sémantique BooleanState', () => {
-    // occupé (en impression) => déclenché => stateValue false
+  it('contactUpdate inverts BooleanState semantics', () => {
+    // occupied (printing) => triggered => stateValue false
     expect(contactUpdate(true)).toEqual({ stateValue: false });
-    // inactif => normal => stateValue true
+    // inactive => normal => stateValue true
     expect(contactUpdate(false)).toEqual({ stateValue: true });
   });
 });

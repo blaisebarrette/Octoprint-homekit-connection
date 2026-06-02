@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -57,15 +57,15 @@
 <body>
   <div class="op-wrap">
     <div class="op-intro">
-      Configurez une ou plusieurs imprimantes OctoPrint. Chaque imprimante est exposée comme un
-      capteur Matter portant le nom choisi. Le bouton « Tester » vérifie l'URL et la clé API.
+      Configure one or more OctoPrint printers. Each printer is exposed as a
+      Matter sensor with the name you choose. The Test button verifies the URL and API key.
     </div>
 
     <div id="op-printers"></div>
 
     <div class="op-footer">
-      <button type="button" id="op-add" class="op-btn op-btn-secondary">+ Ajouter une imprimante</button>
-      <button type="button" id="op-save" class="op-btn op-btn-primary">Enregistrer</button>
+      <button type="button" id="op-add" class="op-btn op-btn-secondary">+ Add printer</button>
+      <button type="button" id="op-save" class="op-btn op-btn-primary">Save</button>
     </div>
     <div id="op-global-status" class="op-status"></div>
   </div>
@@ -96,7 +96,7 @@
       function newPrinter(n) {
         return {
           id: 'printer' + n,
-          sensorName: 'Imprimante ' + n,
+          sensorName: 'Printer ' + n,
           octoprintUrl: 'http://octopi.local',
           apiKey: '',
           sensorType: 'occupancy',
@@ -137,11 +137,11 @@
         head.className = 'op-printer-head';
         const title = document.createElement('div');
         title.className = 'op-printer-title';
-        title.textContent = printer.sensorName || ('Imprimante ' + (index + 1));
+        title.textContent = printer.sensorName || ('Printer ' + (index + 1));
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'op-btn op-btn-danger';
-        removeBtn.textContent = 'Supprimer';
+        removeBtn.textContent = 'Remove';
         removeBtn.addEventListener('click', () => {
           printers.splice(index, 1);
           if (printers.length === 0) {
@@ -159,30 +159,30 @@
         nameInput.placeholder = 'Prusa MK3S Printing';
         nameInput.addEventListener('input', () => {
           printer.sensorName = nameInput.value;
-          title.textContent = nameInput.value || ('Imprimante ' + (index + 1));
+          title.textContent = nameInput.value || ('Printer ' + (index + 1));
         });
-        card.appendChild(field('Nom du capteur (affiché dans HomeKit/Matter)', nameInput));
+        card.appendChild(field('Sensor name (shown in HomeKit/Matter)', nameInput));
 
         const idInput = document.createElement('input');
         idInput.type = 'text';
         idInput.value = printer.id || '';
         idInput.placeholder = 'mk3s';
         bindInput(idInput, printer, 'id', (v) => v.trim());
-        card.appendChild(field('Identifiant unique (stable)', idInput));
+        card.appendChild(field('Unique identifier (stable)', idInput));
 
         const urlInput = document.createElement('input');
         urlInput.type = 'text';
         urlInput.value = printer.octoprintUrl || '';
         urlInput.placeholder = 'http://octopi.local';
         bindInput(urlInput, printer, 'octoprintUrl', (v) => v.trim());
-        card.appendChild(field('URL OctoPrint', urlInput));
+        card.appendChild(field('OctoPrint URL', urlInput));
 
         const keyInput = document.createElement('input');
         keyInput.type = 'password';
         keyInput.value = printer.apiKey || '';
-        keyInput.placeholder = 'Clé API (permission STATUS)';
+        keyInput.placeholder = 'API key (STATUS permission)';
         bindInput(keyInput, printer, 'apiKey', (v) => v.trim());
-        card.appendChild(field('Clé API OctoPrint', keyInput));
+        card.appendChild(field('OctoPrint API key', keyInput));
 
         const grid = document.createElement('div');
         grid.className = 'op-grid';
@@ -200,7 +200,7 @@
         typeSelect.addEventListener('change', () => {
           printer.sensorType = typeSelect.value;
         });
-        grid.appendChild(field('Type de capteur', typeSelect));
+        grid.appendChild(field('Sensor type', typeSelect));
 
         const pollInput = document.createElement('input');
         pollInput.type = 'number';
@@ -225,7 +225,7 @@
           printer.enabled = enabledInput.checked;
         });
         enabledWrap.appendChild(enabledInput);
-        enabledWrap.appendChild(document.createTextNode('Activée'));
+        enabledWrap.appendChild(document.createTextNode('Enabled'));
         checks.appendChild(enabledWrap);
 
         const invertWrap = document.createElement('label');
@@ -237,7 +237,7 @@
           printer.invertState = invertInput.checked;
         });
         invertWrap.appendChild(invertInput);
-        invertWrap.appendChild(document.createTextNode("Inverser l'état"));
+        invertWrap.appendChild(document.createTextNode('Invert state'));
         checks.appendChild(invertWrap);
         card.appendChild(checks);
 
@@ -246,13 +246,13 @@
         const testBtn = document.createElement('button');
         testBtn.type = 'button';
         testBtn.className = 'op-btn op-btn-secondary';
-        testBtn.textContent = 'Tester la connexion';
+        testBtn.textContent = 'Test connection';
         const status = document.createElement('div');
         status.className = 'op-status';
 
         testBtn.addEventListener('click', async () => {
           status.className = 'op-status busy';
-          status.textContent = 'Test en cours…';
+          status.textContent = 'Testing…';
           try {
             const result = await homebridge.request('/test-connection', {
               url: printer.octoprintUrl,
@@ -260,11 +260,11 @@
             });
             status.className = 'op-status ok';
             status.textContent = result.operational
-              ? `Connecté. État: ${result.text}${result.printing ? ' (en impression)' : ''}.`
-              : `Connecté à OctoPrint. Imprimante non opérationnelle (${result.text}).`;
+              ? `Connected. State: ${result.text}${result.printing ? ' (printing)' : ''}.`
+              : `Connected to OctoPrint. Printer not operational (${result.text}).`;
           } catch (e) {
             status.className = 'op-status err';
-            status.textContent = (e && e.message) ? e.message : 'Échec du test de connexion.';
+            status.textContent = (e && e.message) ? e.message : 'Connection test failed.';
           }
         });
 
@@ -287,15 +287,15 @@
 
       document.getElementById('op-save').addEventListener('click', async () => {
         globalStatus.className = 'op-status busy';
-        globalStatus.textContent = 'Enregistrement…';
+        globalStatus.textContent = 'Saving…';
         try {
           await persistToForm();
           await homebridge.savePluginConfig();
           globalStatus.className = 'op-status ok';
-          globalStatus.textContent = 'Configuration enregistrée.';
+          globalStatus.textContent = 'Configuration saved.';
         } catch (e) {
           globalStatus.className = 'op-status err';
-          globalStatus.textContent = (e && e.message) ? e.message : "Échec de l'enregistrement.";
+          globalStatus.textContent = (e && e.message) ? e.message : 'Save failed.';
         }
       });
 

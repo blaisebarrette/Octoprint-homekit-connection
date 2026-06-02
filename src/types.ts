@@ -1,9 +1,9 @@
-/** Type de capteur Matter exposé pour une imprimante. */
+/** Matter sensor type exposed for a printer. */
 export type SensorType = 'occupancy' | 'contact';
 
 /**
- * Configuration brute d'une imprimante telle que reçue depuis config.json.
- * Tous les champs sont optionnels car la validation est faite dans `config.ts`.
+ * Raw printer configuration as received from config.json.
+ * All fields are optional because validation is done in `config.ts`.
  */
 export interface RawPrinterConfig {
   id?: unknown;
@@ -16,7 +16,7 @@ export interface RawPrinterConfig {
   invertState?: unknown;
 }
 
-/** Configuration validée et normalisée d'une imprimante. */
+/** Validated and normalized printer configuration. */
 export interface PrinterConfig {
   id: string;
   sensorName: string;
@@ -28,7 +28,7 @@ export interface PrinterConfig {
   invertState: boolean;
 }
 
-/** Configuration de la plateforme telle que reçue depuis config.json. */
+/** Platform configuration as received from config.json. */
 export interface OctoPrintMatterStatusPlatformConfig {
   platform: string;
   name?: string;
@@ -36,7 +36,7 @@ export interface OctoPrintMatterStatusPlatformConfig {
   debug?: boolean;
 }
 
-/** Drapeaux d'état renvoyés par OctoPrint dans `state.flags`. */
+/** State flags returned by OctoPrint in `state.flags`. */
 export interface OctoPrintStateFlags {
   operational?: boolean;
   paused?: boolean;
@@ -51,7 +51,7 @@ export interface OctoPrintStateFlags {
   sdReady?: boolean;
 }
 
-/** Réponse partielle de `GET /api/printer` (seul l'état nous intéresse). */
+/** Partial response from `GET /api/printer` (only state is used). */
 export interface OctoPrintPrinterState {
   state?: {
     text?: string;
@@ -60,9 +60,9 @@ export interface OctoPrintPrinterState {
 }
 
 /**
- * Sous-ensemble typé de l'API Matter de Homebridge 2 réellement utilisée par
- * le plugin. On définit notre propre interface plutôt que de dépendre des
- * types complets de `homebridge` afin de rester robuste aux variations.
+ * Typed subset of the Homebridge 2 Matter API used by this plugin.
+ * We define our own interface rather than depending on full `homebridge` types
+ * to stay robust across variations.
  */
 export interface MatterAccessoryDefinition {
   UUID: string;

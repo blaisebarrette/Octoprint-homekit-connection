@@ -4,7 +4,7 @@ import {
 } from './settings';
 import type { PrinterConfig, RawPrinterConfig, SensorType } from './types';
 
-/** Résultat de la normalisation: imprimantes valides + erreurs lisibles. */
+/** Normalization result: valid printers plus readable errors. */
 export interface NormalizeResult {
   printers: PrinterConfig[];
   errors: string[];
@@ -41,11 +41,11 @@ function asPollInterval(value: unknown): number {
 }
 
 /**
- * Valide et normalise le tableau d'imprimantes provenant de la configuration.
+ * Validates and normalizes the printers array from configuration.
  *
- * Les entrées invalides sont ignorées et signalées dans `errors` plutôt que de
- * faire échouer le démarrage de toute la plateforme. Les `id` dupliqués sont
- * détectés: seule la première occurrence est conservée.
+ * Invalid entries are skipped and reported in `errors` rather than failing
+ * the entire platform startup. Duplicate `id` values are detected: only the
+ * first occurrence is kept.
  */
 export function normalizePrinters(raw: unknown): NormalizeResult {
   const errors: string[] = [];
@@ -56,17 +56,17 @@ export function normalizePrinters(raw: unknown): NormalizeResult {
   }
 
   if (!Array.isArray(raw)) {
-    errors.push('La configuration "printers" doit être une liste.');
+    errors.push('Configuration "printers" must be an array.');
     return { printers, errors };
   }
 
   const seenIds = new Set<string>();
 
   raw.forEach((entry, index) => {
-    const position = `imprimante #${index + 1}`;
+    const position = `printer #${index + 1}`;
 
     if (typeof entry !== 'object' || entry === null) {
-      errors.push(`${position}: entrée invalide, objet attendu.`);
+      errors.push(`${position}: invalid entry, expected object.`);
       return;
     }
 
@@ -91,12 +91,12 @@ export function normalizePrinters(raw: unknown): NormalizeResult {
     }
 
     if (!id || !sensorName || !octoprintUrl || !apiKey) {
-      errors.push(`${position}: champ(s) requis manquant(s): ${missing.join(', ')}.`);
+      errors.push(`${position}: missing required field(s): ${missing.join(', ')}.`);
       return;
     }
 
     if (seenIds.has(id)) {
-      errors.push(`${position}: id "${id}" dupliqué, entrée ignorée.`);
+      errors.push(`${position}: duplicate id "${id}", entry ignored.`);
       return;
     }
     seenIds.add(id);
