@@ -35,6 +35,7 @@
   "homepage": "https://github.com/blaisebarrette/Octoprint-homekit-connection#readme",
   "scripts": {
     "build": "tsup",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
@@ -45,12 +46,12 @@
     "@types/node": "^25.9.1",
     "eslint": "^10.4.1",
     "homebridge": "^2.0.2",
-    "tsup": "^8.5.1",
-    "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1",
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "@homebridge/plugin-ui-utils": "^2.2.4"
+    "@homebridge/plugin-ui-utils": "^2.2.4",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
   }
 }
