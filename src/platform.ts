@@ -131,9 +131,18 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
       return;
     }
 
+    // Homebridge restores already-known Matter accessories before startup via
+    // configureMatterAccessory(). Registering those again can fail with
+    // duplicate UUID errors, so only register truly new definitions.
+    const toRegister = definitions.filter((definition) => !this.restoredUuids.has(definition.UUID));
+
     try {
-      await matter.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, definitions);
-      this.log.info(`${definitions.length} Matter sensor(s) registered.`);
+      if (toRegister.length > 0) {
+        await matter.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, toRegister);
+      }
+      this.log.info(
+        `${this.running.length} Matter sensor(s) active (${toRegister.length} newly registered).`,
+      );
     } catch (error) {
       this.log.error(
         `Failed to register Matter accessories: ${

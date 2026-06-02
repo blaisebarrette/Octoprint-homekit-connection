@@ -33,20 +33,24 @@ function fakeMotionSensorDeviceType() {
 
 function fakeMatter() {
   const updateAccessoryState = vi.fn(async () => {});
-  const motionSensor = fakeMotionSensorDeviceType();
+  const occupancySensor = fakeMotionSensorDeviceType();
   const matter: MatterApi = {
     uuid: {
       generate: (data: string) => `uuid:${data}`,
       isValid: () => true,
     },
-    deviceTypes: { MotionSensor: motionSensor, ContactSensor: 'ContactSensor' },
+    deviceTypes: {
+      OccupancySensor: occupancySensor,
+      MotionSensor: 'LegacyMotionSensor',
+      ContactSensor: 'ContactSensor',
+    },
     clusterNames: { OccupancySensing: 'occupancySensing', BooleanState: 'booleanState' },
     registerPlatformAccessories: vi.fn(async () => {}),
     unregisterPlatformAccessories: vi.fn(async () => {}),
     updateAccessoryState,
     getAccessoryState: vi.fn(async () => undefined),
   };
-  return { matter, updateAccessoryState, motionSensor };
+  return { matter, updateAccessoryState, occupancySensor };
 }
 
 function makePrinter(overrides: Partial<PrinterConfig> = {}): PrinterConfig {
@@ -71,10 +75,10 @@ describe('OctoPrintMatterStatusAccessory', () => {
   });
 
   it('builds an occupancy definition', () => {
-    const { matter, motionSensor } = fakeMatter();
+    const { matter, occupancySensor } = fakeMatter();
     const acc = new OctoPrintMatterStatusAccessory(matter, makePrinter(), fakeLog());
     const def = acc.buildDefinition();
-    expect(motionSensor.with).toHaveBeenCalledOnce();
+    expect(occupancySensor.with).toHaveBeenCalledOnce();
     expect(def.deviceType).toEqual(expect.objectContaining({ behaviors: expect.any(Array) }));
     expect(def.displayName).toBe('Printer 1');
     expect(def.clusters?.occupancySensing).toBeDefined();

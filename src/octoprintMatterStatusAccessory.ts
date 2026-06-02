@@ -39,10 +39,12 @@ export class OctoPrintMatterStatusAccessory {
     if (this.printer.sensorType === 'contact') {
       return types.ContactSensor;
     }
-    const base = types.MotionSensor;
+    // Homebridge/Matter API variants may expose either OccupancySensor or
+    // MotionSensor for occupancy-like sensors depending on version.
+    const base = types.OccupancySensor ?? types.MotionSensor;
     if (!base || typeof base !== 'object' || !('with' in base)) {
       this.log.warn(
-        `[${this.printer.sensorName}] MotionSensor device type unavailable; occupancy updates may fail.`,
+        `[${this.printer.sensorName}] Occupancy/Motion device type unavailable; occupancy updates may fail.`,
       );
       return base;
     }
