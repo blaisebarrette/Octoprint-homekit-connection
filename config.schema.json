@@ -72,6 +72,12 @@
               "description": "Inverts detection (printing = inactive).",
               "type": "boolean",
               "default": false
+            },
+            "pausedAsActive": {
+              "title": "Treat paused as active",
+              "description": "When enabled, a paused print remains active/occupied instead of becoming inactive.",
+              "type": "boolean",
+              "default": false
             }
           }
         }

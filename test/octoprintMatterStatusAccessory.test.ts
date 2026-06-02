@@ -72,6 +72,7 @@ function makePrinter(overrides: Partial<PrinterConfig> = {}): PrinterConfig {
     pollIntervalSeconds: 10,
     sensorType: 'occupancy',
     invertState: false,
+    pausedAsActive: false,
     ...overrides,
   };
 }

@@ -103,6 +103,7 @@
           enabled: true,
           pollIntervalSeconds: 10,
           invertState: false,
+          pausedAsActive: false,
         };
       }
 
@@ -239,6 +240,18 @@
         invertWrap.appendChild(invertInput);
         invertWrap.appendChild(document.createTextNode('Invert state'));
         checks.appendChild(invertWrap);
+
+        const pausedWrap = document.createElement('label');
+        pausedWrap.className = 'op-check';
+        const pausedInput = document.createElement('input');
+        pausedInput.type = 'checkbox';
+        pausedInput.checked = printer.pausedAsActive === true;
+        pausedInput.addEventListener('change', () => {
+          printer.pausedAsActive = pausedInput.checked;
+        });
+        pausedWrap.appendChild(pausedInput);
+        pausedWrap.appendChild(document.createTextNode('Treat paused as active'));
+        checks.appendChild(pausedWrap);
         card.appendChild(checks);
 
         const actions = document.createElement('div');

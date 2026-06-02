@@ -196,7 +196,7 @@ export class OctoPrintMatterStatusPlatform implements DynamicPlatformPlugin {
     }
     try {
       const state = await printer.client.getPrinterState();
-      const active = isPrinterActive(state);
+      const active = isPrinterActive(state, printer.config.pausedAsActive);
       await printer.accessory.applyActive(active);
     } catch (error) {
       if (error instanceof OctoPrintError) {

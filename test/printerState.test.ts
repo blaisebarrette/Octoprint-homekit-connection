@@ -26,6 +26,10 @@ describe('isPrinterActive', () => {
     expect(isPrinterActive({ state: { flags: { paused: true, printing: false } } })).toBe(false);
   });
 
+  it('can treat paused as active when configured', () => {
+    expect(isPrinterActive({ state: { flags: { paused: true, printing: false } } }, true)).toBe(true);
+  });
+
   it('is true during transitions (pausing, cancelling, finishing)', () => {
     expect(isPrinterActive({ state: { flags: { pausing: true } } })).toBe(true);
     expect(isPrinterActive({ state: { flags: { cancelling: true } } })).toBe(true);

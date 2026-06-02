@@ -5,9 +5,13 @@ import type { OctoPrintPrinterState } from './types';
  *
  * The printer is considered "active" while a job is in progress, including
  * transitional states (pausing, cancelling, resuming, finishing) while the tool
- * head is still moving. Full pause (`paused`) is not considered active.
+ * head is still moving. Full pause (`paused`) is not considered active by
+ * default, but can be opted in via `pausedAsActive`.
  */
-export function isPrinterActive(state: OctoPrintPrinterState | undefined): boolean {
+export function isPrinterActive(
+  state: OctoPrintPrinterState | undefined,
+  pausedAsActive = false,
+): boolean {
   const flags = state?.state?.flags;
   if (!flags) {
     return false;
@@ -17,7 +21,8 @@ export function isPrinterActive(state: OctoPrintPrinterState | undefined): boole
     flags.pausing === true ||
     flags.cancelling === true ||
     flags.resuming === true ||
-    flags.finishing === true
+    flags.finishing === true ||
+    (pausedAsActive && flags.paused === true)
   );
 }
 

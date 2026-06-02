@@ -110,6 +110,7 @@ export function normalizePrinters(raw: unknown): NormalizeResult {
       pollIntervalSeconds: asPollInterval(candidate.pollIntervalSeconds),
       sensorType: asSensorType(candidate.sensorType),
       invertState: asBoolean(candidate.invertState, false),
+      pausedAsActive: asBoolean(candidate.pausedAsActive, false),
     });
   });
 

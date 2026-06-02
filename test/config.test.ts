@@ -35,6 +35,7 @@ describe('normalizePrinters', () => {
         pollIntervalSeconds: 10,
         sensorType: 'occupancy',
         invertState: false,
+        pausedAsActive: false,
       },
     ]);
   });
@@ -87,5 +88,19 @@ describe('normalizePrinters', () => {
     ]);
     expect(result.printers[0].enabled).toBe(false);
     expect(result.printers[0].sensorType).toBe('contact');
+    expect(result.printers[0].pausedAsActive).toBe(false);
+  });
+
+  it('accepts pausedAsActive when set', () => {
+    const result = normalizePrinters([
+      {
+        id: 'p',
+        sensorName: 'P',
+        octoprintUrl: 'http://p.local',
+        apiKey: 'k',
+        pausedAsActive: true,
+      },
+    ]);
+    expect(result.printers[0].pausedAsActive).toBe(true);
   });
 });

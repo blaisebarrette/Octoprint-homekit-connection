@@ -14,6 +14,7 @@ export interface RawPrinterConfig {
   pollIntervalSeconds?: unknown;
   sensorType?: unknown;
   invertState?: unknown;
+  pausedAsActive?: unknown;
 }
 
 /** Validated and normalized printer configuration. */
@@ -26,6 +27,7 @@ export interface PrinterConfig {
   pollIntervalSeconds: number;
   sensorType: SensorType;
   invertState: boolean;
+  pausedAsActive: boolean;
 }
 
 /** Platform configuration as received from config.json. */
