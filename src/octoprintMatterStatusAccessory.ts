@@ -64,8 +64,11 @@ export class OctoPrintMatterStatusAccessory {
       );
       return base;
     }
-    const withMethod = (base as { with: (...behaviors: unknown[]) => unknown }).with;
-    return withMethod(occupancySensingServer.with('PassiveInfrared'));
+    // Call `with` directly on `base` so matter.js receives the correct `this`
+    // (it reads `this.behaviors` internally); a detached call throws.
+    return (base as { with: (...behaviors: unknown[]) => unknown }).with(
+      occupancySensingServer.with('PassiveInfrared'),
+    );
   }
 
   /** Cluster used for state updates. */

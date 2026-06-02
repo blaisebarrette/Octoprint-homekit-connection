@@ -28,10 +28,14 @@ function fakeMotionSensorDeviceType() {
         with: vi.fn((...features: unknown[]) => ({ behavior: 'occupancySensing', features })),
       },
     },
-    with: vi.fn((...behaviors: unknown[]) => ({
-      ...deviceType,
-      behaviors,
-    })),
+    with: vi.fn(function (this: unknown, ...behaviors: unknown[]) {
+      // matter.js reads `this.behaviors` inside `with`; guard against a
+      // detached call that would lose `this`.
+      if (this !== deviceType) {
+        throw new TypeError('with() must be called as a method on the device type');
+      }
+      return { ...deviceType, behaviors };
+    }),
   };
   return deviceType;
 }
